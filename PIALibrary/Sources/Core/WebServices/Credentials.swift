@@ -17,18 +17,36 @@ public struct Credentials {
     /// The password.
     public let password: String
     
+    /// The email.
+    public let email: String
+    
+    /// True if this is a reseller
+    public let isReseller: Bool
+    
     /// :nodoc:
-    public init(username: String, password: String) {
+    public init(username: String, password: String, isReseller: Bool = false) {
         self.username = username
         self.password = password
+        self.email = ""
+        self.isReseller = isReseller
     }
     
+    public init(username: String, password: String, email: String) {
+        self.username = username
+        self.password = password
+        self.email = email
+        self.isReseller = true
+    }
 }
 
 public extension Credentials {
     
-    public func toJSONDictionary() -> [String: Any] {
+    func toJSONDictionary() -> [String: Any] {
         return ["username":username, "password": password]
+    }
+    
+    func resellerToken() -> String {
+        return isReseller ? username + password : ""
     }
 
 }
