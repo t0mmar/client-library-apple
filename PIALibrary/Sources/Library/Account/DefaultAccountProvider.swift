@@ -70,8 +70,9 @@ class DefaultAccountProvider: AccountProvider, ConfigurationAccess, DatabaseAcce
             guard let password = accessedDatabase.secure.password(for: username) else {
                 return nil
             }
+            let accountInfo = accessedDatabase.plain.accountInfo
             return UserAccount(
-                credentials: Credentials(username: username, password: password),
+                credentials: Credentials(username: username, password: password, isReseller: accountInfo?.productId == "librem-one"),
                 info: accessedDatabase.plain.accountInfo
             )
         }
@@ -144,6 +145,32 @@ class DefaultAccountProvider: AccountProvider, ConfigurationAccess, DatabaseAcce
         guard !isLoggedIn else {
             preconditionFailure()
         }
+        
+        if request.credentials.isReseller {
+            
+            let token = request.credentials.resellerToken();
+            
+            self.updateDatabaseWith(token, andUsername: request.credentials.username)
+            
+            let accountInfo = AccountInfo( email: request.credentials.email,
+                                           plan: .other,
+                                           productId: "librem-one",
+                                           isRenewable: false,
+                                           isRecurring: false,
+                                           expirationDate: Date.distantFuture,
+                                           shouldPresentExpirationAlert: false,
+                                           renewUrl: nil)
+
+            self.accessedDatabase.plain.accountInfo = accountInfo
+            
+            let user = UserAccount(credentials: request.credentials, info: accountInfo)
+            Macros.postNotification(.PIAAccountDidLogin, [
+                .user: user
+                ])
+            callback?(user, nil)
+            return
+            
+        } 
         
         webServices.token(credentials: request.credentials) { (token, error) in
             
