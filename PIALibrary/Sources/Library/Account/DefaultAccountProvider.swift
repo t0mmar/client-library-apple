@@ -158,6 +158,7 @@ class DefaultAccountProvider: AccountProvider, ConfigurationAccess, DatabaseAcce
                                            isRenewable: false,
                                            isRecurring: false,
                                            expirationDate: Date.distantFuture,
+                                           canInvite: false,
                                            shouldPresentExpirationAlert: false,
                                            renewUrl: nil)
 
